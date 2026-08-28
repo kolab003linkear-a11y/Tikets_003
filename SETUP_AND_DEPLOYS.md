@@ -205,6 +205,15 @@ Endpoints clave:
 - POST /api/reservations/create
 - POST /api/payments/webhook
 
+Pruebas automatizadas del backend:
+
+```bash
+npm test --workspace backend
+```
+
+La suite inicia Express en un puerto temporal y valida registro, login, catálogo,
+reserva, conflicto de butacas, pago demo, emisión de ticket y validación QR.
+
 ---
 
 ## 8. Frontend móvil con Expo

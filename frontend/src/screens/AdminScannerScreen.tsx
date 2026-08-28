@@ -80,6 +80,7 @@ export default function AdminScannerScreen() {
         <View style={styles.cameraFrame}>
           {scanning ? (
             <BarCodeScanner
+              accessibilityLabel="Cámara para escanear el código QR"
               onBarCodeScanned={handleScan}
               style={StyleSheet.absoluteFillObject}
             />
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  centeredOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(10, 37, 64, 0.75)' },
+  centeredOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.overlayStrong },
   scanningText: { color: colors.text, fontSize: 18, fontWeight: '700' },
   resultBox: {
     backgroundColor: colors.surface,

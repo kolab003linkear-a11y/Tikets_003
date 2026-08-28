@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { colors, typography } from '../theme';
+import AppButton from '../components/AppButton';
+import AppCard from '../components/AppCard';
+import AppInput from '../components/AppInput';
 
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
@@ -42,9 +45,9 @@ export default function AuthScreen() {
         <Text style={styles.title}>Ochoymedio</Text>
         <Text style={styles.subtitle}>{registerMode ? 'Crea tu cuenta para reservar tus entradas.' : 'Inicia sesión para continuar.'}</Text>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput
+        <AppCard style={styles.form}>
+          <AppInput
+            label="Correo electrónico"
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
@@ -52,10 +55,10 @@ export default function AuthScreen() {
             value={email}
             onChangeText={setEmail}
             placeholder="tu@correo.com"
-            placeholderTextColor="#64748b"
+            placeholderTextColor={colors.textSecondary}
           />
-          <Text style={styles.label}>Contraseña</Text>
-          <TextInput
+          <AppInput
+            label="Contraseña"
             autoCapitalize="none"
             autoComplete="password"
             secureTextEntry
@@ -63,13 +66,16 @@ export default function AuthScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder="Mínimo 8 caracteres"
-            placeholderTextColor="#64748b"
+            placeholderTextColor={colors.textSecondary}
           />
           {error && <Text style={styles.error}>{error}</Text>}
-          <Pressable style={[styles.primaryButton, busy && styles.disabled]} onPress={() => void submit()} disabled={busy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>{registerMode ? 'Crear cuenta' : 'Iniciar sesión'}</Text>}
-          </Pressable>
-        </View>
+          <AppButton
+            label={registerMode ? 'Crear cuenta' : 'Iniciar sesión'}
+            onPress={() => void submit()}
+            disabled={busy}
+            loading={busy}
+          />
+        </AppCard>
 
         <Pressable onPress={() => { setRegisterMode((mode) => !mode); setError(null); }}>
           <Text style={styles.switchText}>{registerMode ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}</Text>

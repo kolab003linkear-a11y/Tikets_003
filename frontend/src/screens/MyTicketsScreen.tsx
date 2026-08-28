@@ -53,7 +53,7 @@ export default function MyTicketsScreen() {
         ListHeaderComponent={<><Text style={styles.overline}>Tu cuenta</Text><Text style={styles.title}>Mis Tickets</Text><Text style={styles.subtitle}>Entradas listas para validar en la sala.</Text></>}
         ListEmptyComponent={!loading ? <View style={styles.state}><Text style={styles.stateTitle}>{error ? 'No pudimos cargar tus entradas' : 'Todavía no tienes tickets'}</Text><Text style={styles.stateText}>{error ?? 'Tus entradas confirmadas aparecerán aquí.'}</Text>{error && <Pressable style={styles.retry} onPress={() => void loadTickets()}><Text style={styles.retryText}>Reintentar</Text></Pressable>}</View> : <View style={styles.state}><ActivityIndicator color={colors.primary} /></View>}
         renderItem={({ item }) => (
-          <Pressable style={styles.card} onPress={() => openTicket(item)}>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ticket de ${item.event.title}, butaca ${item.seatNumber}`} style={styles.card} onPress={() => openTicket(item)}>
             <View style={styles.cardHeader}><Text style={styles.movieTitle}>{item.event.title}</Text><Text style={styles.status}>{item.status}</Text></View>
             <Text style={styles.meta}>Butaca {item.seatNumber} · {item.event.room}</Text>
             <Text style={styles.meta}>{new Date(item.event.startTime).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}</Text>

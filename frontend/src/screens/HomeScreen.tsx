@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
+  FlatList,
   Pressable,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { CatalogMovie, getCatalog } from '../api/client';
 import { colors, typography } from '../theme';
+import AppState from '../components/AppState';
 
 const categories = ['Todos', 'CINE', 'TEATRO', 'CONCIERTO'];
 
@@ -50,7 +50,7 @@ export default function HomeScreen() {
         movie.synopsis.toLowerCase().includes(search.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [search, category]);
+  }, [movies, search, category]);
 
   const formatShowtime = (startTime: string) => {
     const date = new Date(startTime);
@@ -59,29 +59,42 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <FlatList
+        style={styles.container}
+        data={!loading && !error ? filteredMovies : []}
+        keyExtractor={(movie) => movie.id}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        initialNumToRender={4}
+        windowSize={5}
+        contentContainerStyle={styles.content}
+        ListHeaderComponent={<>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.overline}>Centro cultural</Text>
             <Text style={styles.title}>Ochoymedio</Text>
           </View>
-          <Pressable style={styles.avatar}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Abrir perfil" style={styles.avatar}>
             <Text style={styles.avatarText}>OM</Text>
           </Pressable>
         </View>
 
         <TextInput
+          accessibilityLabel="Buscar evento o película"
           style={styles.searchInput}
           value={search}
           onChangeText={setSearch}
           placeholder="Buscar evento o película"
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={colors.textSecondary}
         />
 
         <View style={styles.filters}>
           {categories.map((item) => (
             <Pressable
               key={item}
+              accessibilityRole="button"
+              accessibilityState={{ selected: category === item }}
+              accessibilityLabel={`Filtrar por ${item}`}
               style={[styles.chip, category === item && styles.chipSelected]}
               onPress={() => setCategory(item)}
             >
@@ -105,30 +118,20 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Cartelera disponible</Text>
 
         {loading && (
-          <View style={styles.stateContainer}>
-            <ActivityIndicator color={colors.primary} size="large" />
-            <Text style={styles.stateText}>Cargando cartelera...</Text>
-          </View>
+          <AppState loading title="Cargando cartelera..." />
         )}
 
         {!loading && error && (
           <View style={styles.stateContainer}>
-            <Text style={styles.stateTitle}>No pudimos cargar los eventos</Text>
-            <Text style={styles.stateText}>{error}</Text>
+            <AppState title="No pudimos cargar los eventos" message={error} />
             <Pressable style={styles.retryButton} onPress={() => void loadCatalog()}>
               <Text style={styles.buyText}>Reintentar</Text>
             </Pressable>
           </View>
         )}
 
-        {!loading && !error && filteredMovies.length === 0 && (
-          <View style={styles.stateContainer}>
-            <Text style={styles.stateTitle}>No hay eventos para esta búsqueda</Text>
-            <Text style={styles.stateText}>Prueba con otra categoría o término.</Text>
-          </View>
-        )}
-
-        {!loading && !error && filteredMovies.map((movie) => {
+        </>}
+        renderItem={({ item: movie }) => {
           const showtime = movie.showtimes[0];
           const price = Number(showtime?.price ?? 0);
 
@@ -137,7 +140,7 @@ export default function HomeScreen() {
             key={movie.id}
             style={styles.card}
           >
-            <Image source={{ uri: movie.posterUrl }} style={styles.poster} />
+            <Image source={{ uri: movie.posterUrl }} style={styles.poster} resizeMode="cover" />
             <View style={styles.cardContent}>
               <View style={styles.cardHeader}>
                 <Text style={styles.movieTitle}>{movie.title}</Text>
@@ -149,6 +152,8 @@ export default function HomeScreen() {
               <View style={styles.footer}>
                 <Text style={styles.price}>Desde €{price.toFixed(2)}</Text>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Reservar ${movie.title}`}
                   style={styles.buyButton}
                   disabled={!showtime}
                   onPress={() =>
@@ -167,15 +172,17 @@ export default function HomeScreen() {
             </View>
           </View>
           );
-        })}
-      </ScrollView>
+        }}
+        ListEmptyComponent={loading ? null : error ? null : <AppState title="No hay eventos para esta búsqueda" message="Prueba con otra categoría o término." />}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: 16, paddingTop: 12 },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   overline: { color: colors.primary, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4 },
   title: { color: colors.text, fontSize: 30, fontWeight: '800', fontFamily: typography.display },
@@ -207,7 +214,7 @@ const styles = StyleSheet.create({
   heroImage: { width: '100%', height: '100%' },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
     padding: 16,
   },
@@ -220,7 +227,7 @@ const styles = StyleSheet.create({
   cardContent: { flex: 1, padding: 14 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   movieTitle: { flex: 1, color: colors.text, fontSize: 18, fontWeight: '700', marginRight: 8, fontFamily: typography.display },
-  rating: { color: '#fbbf24', fontSize: 13, fontWeight: '700' },
+  rating: { color: colors.warning, fontSize: 13, fontWeight: '700' },
   meta: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
   synopsis: { color: colors.textSecondary, fontSize: 12, lineHeight: 18, marginTop: 10, marginBottom: 12 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' },
@@ -228,7 +235,7 @@ const styles = StyleSheet.create({
   buyButton: { backgroundColor: colors.primary, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
   buyText: { color: colors.text, fontWeight: '700' },
   stateContainer: { alignItems: 'center', paddingVertical: 36, paddingHorizontal: 20 },
-  stateTitle: { color: '#f8fafc', fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  stateTitle: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
   stateText: { color: colors.textSecondary, fontSize: 14, textAlign: 'center', lineHeight: 20 },
   retryButton: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 11, marginTop: 16 },
 });

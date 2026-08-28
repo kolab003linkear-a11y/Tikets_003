@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { cancelReservation, confirmDemoPayment } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { colors, typography } from '../theme';
+import AppButton from '../components/AppButton';
 
 export default function CheckoutScreen() {
   const navigation = useNavigation<any>();
@@ -84,19 +85,15 @@ export default function CheckoutScreen() {
 
         <View style={styles.formCard}>
           <Text style={styles.label}>Pago seguro</Text>
-          <TextInput style={styles.input} value={cardName} onChangeText={setCardName} placeholder="Nombre del titular" placeholderTextColor="#94a3b8" />
-          <TextInput style={styles.input} value={cardNumber} onChangeText={setCardNumber} placeholder="Número de tarjeta" placeholderTextColor="#94a3b8" keyboardType="numeric" />
+          <TextInput accessibilityLabel="Nombre del titular" style={styles.input} value={cardName} onChangeText={setCardName} placeholder="Nombre del titular" placeholderTextColor={colors.textSecondary} />
+          <TextInput accessibilityLabel="Número de tarjeta" style={styles.input} value={cardNumber} onChangeText={setCardNumber} placeholder="Número de tarjeta" placeholderTextColor={colors.textSecondary} keyboardType="numeric" />
           <View style={styles.inlineRow}>
-            <TextInput style={[styles.input, styles.half]} value={expiry} onChangeText={setExpiry} placeholder="MM/AA" placeholderTextColor="#94a3b8" keyboardType="numeric" />
-            <TextInput style={[styles.input, styles.half]} value={cvv} onChangeText={setCvv} placeholder="CVV" placeholderTextColor="#94a3b8" keyboardType="numeric" secureTextEntry />
+            <TextInput accessibilityLabel="Fecha de vencimiento" style={[styles.input, styles.half]} value={expiry} onChangeText={setExpiry} placeholder="MM/AA" placeholderTextColor={colors.textSecondary} keyboardType="numeric" />
+            <TextInput accessibilityLabel="Código de seguridad" style={[styles.input, styles.half]} value={cvv} onChangeText={setCvv} placeholder="CVV" placeholderTextColor={colors.textSecondary} keyboardType="numeric" secureTextEntry />
           </View>
           {error && <Text style={styles.error}>{error}</Text>}
-          <Pressable style={styles.secondaryButton} onPress={() => void cancelCurrentReservation()} disabled={processing}>
-            <Text style={styles.secondaryButtonText}>Cancelar reserva</Text>
-          </Pressable>
-          <Pressable style={styles.payButton} onPress={() => void pay()} disabled={processing}>
-            <Text style={styles.payText}>{processing ? 'Procesando pago...' : 'Pagar ahora'}</Text>
-          </Pressable>
+          <AppButton label="Cancelar reserva" variant="secondary" onPress={() => void cancelCurrentReservation()} disabled={processing} />
+          <AppButton label="Pagar ahora" onPress={() => void pay()} disabled={processing} loading={processing} />
         </View>
       </ScrollView>
     </SafeAreaView>

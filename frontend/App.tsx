@@ -48,6 +48,7 @@ function HomeTabs() {
     <Tab.Navigator
       screenOptions={({ route }: any) => ({
         headerShown: false,
+        tabBarAccessibilityLabel: `Pestaña ${route.name}`,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {

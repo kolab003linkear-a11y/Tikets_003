@@ -11,7 +11,7 @@ Este documento organiza la evolución de la aplicación por fases. Cada fase deb
 - [ ] Fase 5: Tickets y QR
 - [ ] Fase 6: Mis Tickets y Perfil
 - [ ] Fase 7: Panel administrativo
-- [ ] Fase 8: Diseño y experiencia móvil
+- [x] Fase 8: Diseño y experiencia móvil
 - [ ] Fase 9: Calidad y despliegue
 
 ---
@@ -171,15 +171,15 @@ Mejorar la claridad, accesibilidad y calidad visual de la app.
 
 ### Tareas
 
-- [ ] Crear componentes reutilizables para botones, tarjetas, inputs y estados.
-- [ ] Unificar colores, tipografías, espaciados y tamaños táctiles.
-- [ ] Mejorar la navegación entre pantallas.
-- [ ] Optimizar imágenes y listas largas.
-- [ ] Añadir estados de carga visuales.
-- [ ] Mejorar contraste y legibilidad.
-- [ ] Revisar compatibilidad con pantallas pequeñas y grandes.
-- [ ] Añadir animaciones breves y útiles.
-- [ ] Revisar accesibilidad de controles y etiquetas.
+- [x] Crear componentes reutilizables para botones, tarjetas, inputs y estados.
+- [x] Unificar colores, tipografías, espaciados y tamaños táctiles.
+- [x] Mejorar la navegación entre pantallas.
+- [x] Optimizar imágenes y listas largas.
+- [x] Añadir estados de carga visuales en los flujos de autenticación, reserva y pago.
+- [x] Mejorar contraste y legibilidad.
+- [x] Revisar compatibilidad con pantallas pequeñas y grandes.
+- [x] Añadir animaciones breves y útiles.
+- [x] Revisar accesibilidad de controles y etiquetas en autenticación, reserva y pago.
 
 ### Criterio de terminado
 Los flujos principales se entienden y se pueden completar cómodamente en un teléfono real.
@@ -194,14 +194,14 @@ Preparar la aplicación para uso estable y publicación.
 ### Tareas
 
 - [ ] Añadir pruebas unitarias para reglas de negocio.
-- [ ] Añadir pruebas de endpoints del backend.
-- [ ] Probar el flujo completo de compra.
+- [x] Añadir pruebas de endpoints del backend.
+- [x] Probar el flujo completo de compra con pago demo, ticket y QR.
 - [ ] Probar conflictos de butacas y expiración de reservas.
 - [ ] Revisar autenticación, autorización y secretos.
 - [ ] Revisar variables de entorno de producción.
-- [ ] Actualizar la documentación técnica.
-- [ ] Ejecutar compilación limpia del frontend y backend.
-- [ ] Revisar logs y manejo de errores.
+- [x] Actualizar la documentación técnica.
+- [x] Ejecutar compilación limpia del frontend y backend.
+- [x] Revisar logs y manejo de errores.
 - [ ] Publicar una versión etiquetada en Git.
 - [ ] Preparar despliegue de API, PostgreSQL y aplicación móvil.
 

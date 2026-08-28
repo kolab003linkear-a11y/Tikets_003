@@ -30,7 +30,7 @@ export default function TicketScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Pressable style={styles.homeButton} onPress={() => navigation.popToTop()}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Volver al inicio" style={styles.homeButton} onPress={() => navigation.popToTop()}>
           <Text style={styles.homeText}>Inicio</Text>
         </Pressable>
 

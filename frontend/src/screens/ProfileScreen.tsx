@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { colors, typography } from '../theme';
+import AppCard from '../components/AppCard';
+import AppInput from '../components/AppInput';
 
 export default function ProfileScreen() {
   const { user, updateProfile, signOut } = useAuth();
@@ -37,9 +39,9 @@ export default function ProfileScreen() {
         <Text style={styles.title}>Perfil</Text>
         <Text style={styles.subtitle}>Administra tus datos y tu acceso a TicketSafe.</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput
+        <AppCard style={styles.card}>
+          <AppInput
+            label="Correo electrónico"
             autoCapitalize="none"
             keyboardType="email-address"
             style={styles.input}
@@ -52,7 +54,7 @@ export default function ProfileScreen() {
           <Pressable style={[styles.primaryButton, saving && styles.disabled]} onPress={() => void save()} disabled={saving}>
             {saving ? <ActivityIndicator color={colors.text} /> : <Text style={styles.buttonText}>Guardar cambios</Text>}
           </Pressable>
-        </View>
+        </AppCard>
 
         <Pressable style={styles.logoutButton} onPress={() => void signOut()}>
           <Text style={styles.logoutText}>Cerrar sesión</Text>

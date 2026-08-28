@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { cancelReservation, createReservation } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { colors, typography } from '../theme';
+import AppButton from '../components/AppButton';
 
 const defaultRows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const defaultColumns = 8;
@@ -168,6 +169,9 @@ export default function SeatSelectionScreen() {
                     <Pressable
                       key={seatCode}
                       onPress={() => toggleSeat(seatCode)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Butaca ${seatCode}`}
+                      accessibilityState={{ disabled: isOccupied, selected: isSelected }}
                       style={[styles.seat, isSelected && styles.selectedSeat, isOccupied && styles.occupiedSeat]}
                     >
                       <Text style={styles.seatText}>{column}</Text>
@@ -188,16 +192,13 @@ export default function SeatSelectionScreen() {
         <View style={styles.summary}>
           <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Butacas</Text><Text style={styles.summaryValue}>{selectedSeats.length ? selectedSeats.join(', ') : 'Ninguna'}</Text></View>
           <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Total</Text><Text style={styles.summaryValue}>€{total.toFixed(2)}</Text></View>
-          <Pressable
-            style={[styles.secondaryButton, (!pendingReservationId || timeLeft === 0) && styles.secondaryButtonDisabled]}
+          <AppButton
+            label="Cancelar reserva"
+            variant="secondary"
             onPress={() => { void abandonPendingReservation(true); }}
             disabled={!pendingReservationId || timeLeft === 0}
-          >
-            <Text style={styles.secondaryButtonText}>Cancelar reserva</Text>
-          </Pressable>
-          <Pressable style={styles.button} onPress={() => void goToCheckout()} disabled={reserving || timeLeft === 0}>
-            {reserving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continuar al pago</Text>}
-          </Pressable>
+          />
+          <AppButton label="Continuar al pago" onPress={() => void goToCheckout()} disabled={reserving || timeLeft === 0} loading={reserving} />
         </View>
       </ScrollView>
     </SafeAreaView>

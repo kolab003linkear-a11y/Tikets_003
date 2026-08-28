@@ -865,8 +865,12 @@ app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-app.listen(port, () => {
-  const message = `Ochoymedio API running at http://localhost:${port}`;
-  console.log(message);
-  writeLog('INFO', message);
-});
+export { app, prisma };
+
+if (require.main === module) {
+  app.listen(port, () => {
+    const message = `Ochoymedio API running at http://localhost:${port}`;
+    console.log(message);
+    writeLog('INFO', message);
+  });
+}

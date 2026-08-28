@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   SafeAreaView,
@@ -10,48 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
-const movies = [
-  {
-    id: '1',
-    title: 'La sombra de la luna',
-    category: 'CINE',
-    rating: 8.9,
-    poster:
-      'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80',
-    runtime: '112 min',
-    date: 'Hoy, 20:30',
-    price: 16.5,
-    showtimeId: 'show_001',
-    synopsis: 'Un thriller íntimo sobre identidad y memoria en una ciudad costera.',
-  },
-  {
-    id: '2',
-    title: 'Sonora de humo',
-    category: 'CONCIERTO',
-    rating: 9.1,
-    poster:
-      'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80',
-    runtime: '95 min',
-    date: 'Mañana, 19:00',
-    price: 24.0,
-    showtimeId: 'show_002',
-    synopsis: 'Una noche de jazz y electrónica en la sala principal del centro cultural.',
-  },
-  {
-    id: '3',
-    title: 'La última línea',
-    category: 'TEATRO',
-    rating: 8.7,
-    poster:
-      'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1200&q=80',
-    runtime: '130 min',
-    date: 'Sábado, 21:15',
-    price: 18.0,
-    showtimeId: 'show_003',
-    synopsis: 'Una pieza contemporánea sobre el poder, la corrupción y la culpa.',
-  },
-];
+import { CatalogMovie, getCatalog } from '../api/client';
 
 const categories = ['Todos', 'CINE', 'TEATRO', 'CONCIERTO'];
 
@@ -59,6 +19,27 @@ export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Todos');
+  const [movies, setMovies] = useState<CatalogMovie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCatalog = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getCatalog();
+      setMovies(response.movies);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'No se pudo cargar la cartelera.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCatalog();
+  }, [loadCatalog]);
 
   const filteredMovies = useMemo(() => {
     return movies.filter((movie) => {
@@ -69,6 +50,11 @@ export default function HomeScreen() {
       return matchesCategory && matchesSearch;
     });
   }, [search, category]);
+
+  const formatShowtime = (startTime: string) => {
+    const date = new Date(startTime);
+    return date.toLocaleString('es-ES', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -117,36 +103,66 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionTitle}>Cartelera disponible</Text>
 
-        {filteredMovies.map((movie) => (
+        {loading && (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator color="#f43f5e" size="large" />
+            <Text style={styles.stateText}>Cargando cartelera...</Text>
+          </View>
+        )}
+
+        {!loading && error && (
+          <View style={styles.stateContainer}>
+            <Text style={styles.stateTitle}>No pudimos cargar los eventos</Text>
+            <Text style={styles.stateText}>{error}</Text>
+            <Pressable style={styles.retryButton} onPress={() => void loadCatalog()}>
+              <Text style={styles.buyText}>Reintentar</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {!loading && !error && filteredMovies.length === 0 && (
+          <View style={styles.stateContainer}>
+            <Text style={styles.stateTitle}>No hay eventos para esta búsqueda</Text>
+            <Text style={styles.stateText}>Prueba con otra categoría o término.</Text>
+          </View>
+        )}
+
+        {!loading && !error && filteredMovies.map((movie) => {
+          const showtime = movie.showtimes[0];
+          const price = Number(showtime?.price ?? 0);
+
+          return (
           <Pressable
             key={movie.id}
             style={styles.card}
+            disabled={!showtime}
             onPress={() =>
               navigation.navigate('SeatSelection', {
                 movieTitle: movie.title,
-                showtimeId: movie.showtimeId,
-                price: movie.price,
+                showtimeId: showtime.id,
+                price,
               })
             }
           >
-            <Image source={{ uri: movie.poster }} style={styles.poster} />
+            <Image source={{ uri: movie.posterUrl }} style={styles.poster} />
             <View style={styles.cardContent}>
               <View style={styles.cardHeader}>
                 <Text style={styles.movieTitle}>{movie.title}</Text>
-                <Text style={styles.rating}>★ {movie.rating}</Text>
+                <Text style={styles.rating}>★ {movie.rating ?? '-'}</Text>
               </View>
-              <Text style={styles.meta}>{movie.category} • {movie.runtime}</Text>
-              <Text style={styles.meta}>{movie.date}</Text>
+              <Text style={styles.meta}>{movie.category} • {movie.duration} min</Text>
+              <Text style={styles.meta}>{showtime ? `${formatShowtime(showtime.startTime)} • ${showtime.room.name}` : 'Sin funciones disponibles'}</Text>
               <Text style={styles.synopsis}>{movie.synopsis}</Text>
               <View style={styles.footer}>
-                <Text style={styles.price}>Desde €{movie.price.toFixed(2)}</Text>
+                <Text style={styles.price}>Desde €{price.toFixed(2)}</Text>
                 <Pressable
                   style={styles.buyButton}
+                  disabled={!showtime}
                   onPress={() =>
                     navigation.navigate('SeatSelection', {
                       movieTitle: movie.title,
-                      showtimeId: movie.showtimeId,
-                      price: movie.price,
+                      showtimeId: showtime.id,
+                      price,
                     })
                   }
                 >
@@ -155,7 +171,8 @@ export default function HomeScreen() {
               </View>
             </View>
           </Pressable>
-        ))}
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -215,4 +232,8 @@ const styles = StyleSheet.create({
   price: { color: '#f8fafc', fontSize: 16, fontWeight: '800' },
   buyButton: { backgroundColor: '#e11d48', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
   buyText: { color: '#fff', fontWeight: '700' },
+  stateContainer: { alignItems: 'center', paddingVertical: 36, paddingHorizontal: 20 },
+  stateTitle: { color: '#f8fafc', fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  stateText: { color: '#94a3b8', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  retryButton: { backgroundColor: '#e11d48', borderRadius: 12, paddingHorizontal: 18, paddingVertical: 11, marginTop: 16 },
 });

@@ -58,7 +58,7 @@ function ScannerScreen() {
 function HomeTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }: any) => ({
         headerShown: false,
         tabBarActiveTintColor: '#e11d48',
         tabBarInactiveTintColor: '#94a3b8',
@@ -69,7 +69,7 @@ function HomeTabs() {
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           const iconMap = {
             Cartelera: 'film-outline',
             'Mis Tickets': 'ticket-outline',

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { confirmDemoPayment } from '../api/client';
+import { cancelReservation, confirmDemoPayment } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { colors, typography } from '../theme';
 
@@ -47,6 +47,22 @@ export default function CheckoutScreen() {
     }
   };
 
+  const cancelCurrentReservation = async () => {
+    if (!token) {
+      navigation.goBack();
+      return;
+    }
+
+    try {
+      await cancelReservation(token, reservationId);
+      Alert.alert('Reserva cancelada', 'La reserva pendiente ha sido cancelada.');
+      navigation.goBack();
+    } catch (cancelError) {
+      const message = cancelError instanceof Error ? cancelError.message : 'No se pudo cancelar la reserva.';
+      Alert.alert('No se pudo cancelar la reserva', message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -75,6 +91,9 @@ export default function CheckoutScreen() {
             <TextInput style={[styles.input, styles.half]} value={cvv} onChangeText={setCvv} placeholder="CVV" placeholderTextColor="#94a3b8" keyboardType="numeric" secureTextEntry />
           </View>
           {error && <Text style={styles.error}>{error}</Text>}
+          <Pressable style={styles.secondaryButton} onPress={() => void cancelCurrentReservation()} disabled={processing}>
+            <Text style={styles.secondaryButtonText}>Cancelar reserva</Text>
+          </Pressable>
           <Pressable style={styles.payButton} onPress={() => void pay()} disabled={processing}>
             <Text style={styles.payText}>{processing ? 'Procesando pago...' : 'Pagar ahora'}</Text>
           </Pressable>
@@ -102,5 +121,7 @@ const styles = StyleSheet.create({
   half: { flex: 1 },
   payButton: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 15, marginTop: 8 },
   payText: { textAlign: 'center', color: colors.text, fontWeight: '800', fontSize: 16 },
+  secondaryButton: { backgroundColor: colors.surfaceRaised, borderRadius: 12, paddingVertical: 12, marginTop: 8, borderWidth: 1, borderColor: colors.border },
+  secondaryButtonText: { textAlign: 'center', color: colors.text, fontWeight: '700', fontSize: 14 },
   error: { color: colors.critical, fontSize: 13, lineHeight: 19, marginBottom: 10 },
 });

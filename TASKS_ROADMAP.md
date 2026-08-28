@@ -72,7 +72,7 @@ Convertir la selección visual de butacas en una reserva controlada por el backe
 - [x] Enviar el usuario autenticado y las butacas seleccionadas.
 - [x] Controlar el vencimiento de cinco minutos.
 - [x] Mostrar conflictos cuando otra reserva ocupó una butaca.
-- [ ] Permitir cancelar o abandonar una selección pendiente.
+- [x] Permitir cancelar o abandonar una selección pendiente.
 
 ### Criterio de terminado
 Dos dispositivos no pueden confirmar la misma butaca y el estado mostrado coincide con la base de datos.

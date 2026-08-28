@@ -75,6 +75,16 @@ export type PaymentResponse = {
   };
 };
 
+export type CancelReservationResponse = {
+  success: boolean;
+  cancelled: boolean;
+  message?: string;
+  reservation: {
+    id: string;
+    status: 'PENDING' | 'PAID' | 'CANCELLED';
+  };
+};
+
 export type TicketDetails = {
   id: string;
   seatNumber: string;
@@ -136,6 +146,13 @@ export function confirmDemoPayment(token: string, reservationId: string) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ reservationId }),
+  });
+}
+
+export function cancelReservation(token: string, reservationId: string) {
+  return request<CancelReservationResponse>(`/api/reservations/${reservationId}/cancel`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

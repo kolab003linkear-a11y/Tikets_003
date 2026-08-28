@@ -330,6 +330,66 @@ app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
   }
 });
 
+app.post('/api/reservations/:reservationId/cancel', authMiddleware, async (req, res, next) => {
+  try {
+    const reservationId = req.params.reservationId;
+    const authenticatedUser = (req as Request & { user: { sub: string } }).user;
+
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: reservationId },
+      include: { tickets: true, showtime: true },
+    });
+
+    if (!reservation || reservation.userId !== authenticatedUser.sub) {
+      throw new AppError('Reservation not found.', 404);
+    }
+
+    if (reservation.status !== ReservationStatus.PENDING) {
+      return res.json({
+        success: true,
+        cancelled: false,
+        reservation,
+        message: 'This reservation is no longer pending and cannot be cancelled.',
+      });
+    }
+
+    const updatedReservation = await prisma.$transaction(async (tx) => {
+      const cancelled = await tx.reservation.update({
+        where: { id: reservation.id },
+        data: { status: ReservationStatus.CANCELLED },
+        include: { tickets: true, showtime: true },
+      });
+
+      if (cancelled.tickets.length > 0) {
+        await tx.showtime.update({
+          where: { id: cancelled.showtimeId },
+          data: {
+            availableSeats: {
+              increment: cancelled.tickets.length,
+            },
+          },
+        });
+      }
+
+      await tx.ticket.updateMany({
+        where: { reservationId: reservation.id },
+        data: { status: TicketStatus.EXPIRED },
+      });
+
+      return cancelled;
+    });
+
+    return res.json({
+      success: true,
+      cancelled: true,
+      reservation: updatedReservation,
+      message: 'Reservation cancelled and seats released.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post('/api/payments/demo-confirm', authMiddleware, async (req, res, next) => {
   try {
     if (process.env.NODE_ENV === 'production') {

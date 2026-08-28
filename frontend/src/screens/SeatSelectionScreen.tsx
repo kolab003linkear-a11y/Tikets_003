@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { createReservation } from '../api/client';
+import { cancelReservation, createReservation } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { colors, typography } from '../theme';
 
@@ -16,6 +16,7 @@ export default function SeatSelectionScreen() {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(300);
   const [reserving, setReserving] = useState(false);
+  const [pendingReservationId, setPendingReservationId] = useState<string | null>(null);
 
   const layout = useMemo(() => {
     const rows = Array.isArray(seatLayout?.rows) && seatLayout.rows.length > 0 ? seatLayout.rows : defaultRows;
@@ -38,11 +39,23 @@ export default function SeatSelectionScreen() {
 
   useEffect(() => {
     if (timeLeft === 0) {
+      if (pendingReservationId && token) {
+        void cancelReservation(token, pendingReservationId).catch(() => undefined);
+        setPendingReservationId(null);
+      }
       Alert.alert('Tiempo agotado', 'La reserva ha expirado. Vuelve a seleccionar función.', [
         { text: 'Volver', onPress: () => navigation.goBack() },
       ]);
     }
-  }, [timeLeft, navigation]);
+  }, [timeLeft, navigation, pendingReservationId, token]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingReservationId && token) {
+        void cancelReservation(token, pendingReservationId).catch(() => undefined);
+      }
+    };
+  }, [pendingReservationId, token]);
 
   const occupiedSet = useMemo(() => new Set(occupiedSeats), [occupiedSeats]);
 
@@ -56,6 +69,31 @@ export default function SeatSelectionScreen() {
 
   const total = selectedSeats.length * price;
 
+  const abandonPendingReservation = async (showConfirmation = false) => {
+    if (!pendingReservationId || !token) {
+      if (showConfirmation) {
+        navigation.goBack();
+      }
+      return;
+    }
+
+    try {
+      await cancelReservation(token, pendingReservationId);
+      setPendingReservationId(null);
+      if (showConfirmation) {
+        Alert.alert('Reserva cancelada', 'La selección pendiente ha sido cancelada.');
+      }
+    } catch (cancelError) {
+      const message = cancelError instanceof Error ? cancelError.message : 'No se pudo cancelar la reserva pendiente.';
+      Alert.alert('No se pudo cancelar la reserva', message);
+      return;
+    }
+
+    if (showConfirmation) {
+      navigation.goBack();
+    }
+  };
+
   const goToCheckout = async () => {
     if (selectedSeats.length === 0) {
       Alert.alert('Selecciona al menos una butaca');
@@ -67,6 +105,7 @@ export default function SeatSelectionScreen() {
     setReserving(true);
     try {
       const response = await createReservation(token, user.id, showtimeId, selectedSeats);
+      setPendingReservationId(response.reservation.id);
       navigation.navigate('Checkout', {
         reservationId: response.reservation.id,
         selectedSeats,
@@ -90,7 +129,7 @@ export default function SeatSelectionScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable onPress={() => { void abandonPendingReservation(true); }} style={styles.backButton}>
             <Text style={styles.backText}>←</Text>
           </Pressable>
           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -137,6 +176,13 @@ export default function SeatSelectionScreen() {
         <View style={styles.summary}>
           <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Butacas</Text><Text style={styles.summaryValue}>{selectedSeats.length ? selectedSeats.join(', ') : 'Ninguna'}</Text></View>
           <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Total</Text><Text style={styles.summaryValue}>€{total.toFixed(2)}</Text></View>
+          <Pressable
+            style={[styles.secondaryButton, (!pendingReservationId || timeLeft === 0) && styles.secondaryButtonDisabled]}
+            onPress={() => { void abandonPendingReservation(true); }}
+            disabled={!pendingReservationId || timeLeft === 0}
+          >
+            <Text style={styles.secondaryButtonText}>Cancelar reserva</Text>
+          </Pressable>
           <Pressable style={styles.button} onPress={() => void goToCheckout()} disabled={reserving || timeLeft === 0}>
             {reserving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continuar al pago</Text>}
           </Pressable>
@@ -179,4 +225,7 @@ const styles = StyleSheet.create({
   summaryValue: { color: colors.text, fontSize: 14, fontWeight: '700', flexShrink: 1 },
   button: { marginTop: 12, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14 },
   buttonText: { color: colors.text, textAlign: 'center', fontWeight: '800', fontSize: 16 },
+  secondaryButton: { marginTop: 12, backgroundColor: colors.surfaceRaised, borderRadius: 12, paddingVertical: 12, borderWidth: 1, borderColor: colors.border },
+  secondaryButtonDisabled: { opacity: 0.5 },
+  secondaryButtonText: { color: colors.text, textAlign: 'center', fontWeight: '700', fontSize: 14 },
 });

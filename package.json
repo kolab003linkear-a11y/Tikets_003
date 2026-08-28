@@ -1,0 +1,14 @@
+{
+  "name": "ochoymedio",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace backend run dev",
+    "dev:frontend": "npm --workspace frontend run start",
+    "install:all": "npm install --workspaces",
+    "build:backend": "npm --workspace backend run build"
+  }
+}

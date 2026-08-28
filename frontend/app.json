@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Ochoymedio",
+    "slug": "ochoymedio-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#020817"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#020817"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

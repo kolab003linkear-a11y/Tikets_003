@@ -214,6 +214,17 @@ npm test --workspace backend
 La suite inicia Express en un puerto temporal y valida registro, login, catálogo,
 reserva, conflicto de butacas, pago demo, emisión de ticket y validación QR.
 
+Diagnóstico operativo y logs:
+
+```powershell
+npm run ops:check
+```
+
+El diagnóstico escribe el estado de procesos, puertos, contenedor PostgreSQL,
+migraciones Prisma, API, frontend y dependencias en `backend/logs/operations.log`.
+El backend registra además peticiones, estados HTTP, duración, conexión de base,
+errores y apagado en `backend/logs/app.log`.
+
 ---
 
 ## 8. Frontend móvil con Expo

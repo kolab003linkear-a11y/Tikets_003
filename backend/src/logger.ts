@@ -4,7 +4,7 @@ import path from 'path';
 const logDirectory = path.resolve(__dirname, '../logs');
 const logFile = path.join(logDirectory, 'app.log');
 
-export function writeLog(level: 'INFO' | 'ERROR', message: string, details?: unknown) {
+export function writeLog(level: 'INFO' | 'WARN' | 'ERROR', message: string, details?: unknown) {
   fs.mkdirSync(logDirectory, { recursive: true });
   const suffix = details === undefined ? '' : ` ${serialize(details)}`;
   const line = `${new Date().toISOString()} [${level}] ${message}${suffix}\n`;

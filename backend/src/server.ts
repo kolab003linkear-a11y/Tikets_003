@@ -16,6 +16,14 @@ const app = express();
 const port = Number(process.env.PORT ?? 4000);
 const jwtSecret = process.env.JWT_SECRET ?? 'ochoymedio-dev-secret';
 
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    writeLog('INFO', `${req.method} ${req.originalUrl} ${res.statusCode}`, { durationMs: Date.now() - startedAt });
+  });
+  next();
+});
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -112,8 +120,14 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(helmet());
 app.use(express.json({ limit: '2mb' }));
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'ochoymedio-api', timestamp: new Date().toISOString() });
+app.get('/api/health', async (_req, res, next) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ ok: true, service: 'ochoymedio-api', database: 'connected', timestamp: new Date().toISOString() });
+  } catch (error) {
+    writeLog('ERROR', 'Database health check failed', error);
+    next(new AppError('Database unavailable.', 503));
+  }
 });
 
 app.post('/api/auth/register', async (req, res, next) => {
@@ -872,5 +886,16 @@ if (require.main === module) {
     const message = `Ochoymedio API running at http://localhost:${port}`;
     console.log(message);
     writeLog('INFO', message);
-  });
+    prisma.$connect()
+      .then(() => writeLog('INFO', 'Database connection established'))
+      .catch((error) => writeLog('ERROR', 'Database connection failed', error));
+  }).on('error', (error) => writeLog('ERROR', 'Backend listener failed', error));
+
+  const shutdown = async (signal: string) => {
+    writeLog('INFO', `Shutdown requested: ${signal}`);
+    await prisma.$disconnect();
+    process.exit(0);
+  };
+  process.once('SIGINT', () => void shutdown('SIGINT'));
+  process.once('SIGTERM', () => void shutdown('SIGTERM'));
 }

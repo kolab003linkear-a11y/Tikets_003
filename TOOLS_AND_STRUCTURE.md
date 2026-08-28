@@ -23,6 +23,7 @@ backend/
 frontend/
   App.tsx              Navegación principal
   index.ts             Entry point de Expo
+  metro.config.js      Resolución de dependencias hoisted del monorepo
   src/screens/         Pantallas móviles
   app.json              Configuración Expo
 App.tsx                Demo móvil alternativa en la raíz
@@ -50,6 +51,8 @@ npm run prisma:seed
 ```
 
 Para probar en un teléfono, el PC y el teléfono deben compartir Wi-Fi. Ejecuta Expo con `--lan` y usa la IP LAN del PC, no `localhost`.
+
+Para probar la versión web, ejecuta `npm run web` dentro de `frontend` y abre `http://localhost:8081`. La configuración Metro incluye el `node_modules` raíz para que paquetes como `react-native-svg` se resuelvan correctamente.
 
 ## Limpieza
 

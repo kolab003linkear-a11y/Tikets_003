@@ -1,9 +1,26 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { AuthUser, login, register } from '../api/client';
 
 const TOKEN_KEY = 'ochoymedio.auth.token';
 const USER_KEY = 'ochoymedio.auth.user';
+
+const isWeb = Platform.OS === 'web';
+
+async function getStoredValue(key: string) {
+  return isWeb ? globalThis.localStorage.getItem(key) : SecureStore.getItemAsync(key);
+}
+
+async function setStoredValue(key: string, value: string) {
+  if (isWeb) globalThis.localStorage.setItem(key, value);
+  else await SecureStore.setItemAsync(key, value);
+}
+
+async function deleteStoredValue(key: string) {
+  if (isWeb) globalThis.localStorage.removeItem(key);
+  else await SecureStore.deleteItemAsync(key);
+}
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -22,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {
-    Promise.all([SecureStore.getItemAsync(TOKEN_KEY), SecureStore.getItemAsync(USER_KEY)])
+    Promise.all([getStoredValue(TOKEN_KEY), getStoredValue(USER_KEY)])
       .then(([storedToken, storedUser]) => {
         if (storedToken && storedUser) {
           setToken(storedToken);
@@ -30,17 +47,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(() => {
-        SecureStore.deleteItemAsync(TOKEN_KEY);
-        SecureStore.deleteItemAsync(USER_KEY);
+        void deleteStoredValue(TOKEN_KEY);
+        void deleteStoredValue(USER_KEY);
       })
       .finally(() => setRestoring(false));
   }, []);
 
   const saveSession = async (nextToken: string, nextUser: AuthUser) => {
-    await Promise.all([
-      SecureStore.setItemAsync(TOKEN_KEY, nextToken),
-      SecureStore.setItemAsync(USER_KEY, JSON.stringify(nextUser)),
-    ]);
+    await Promise.all([setStoredValue(TOKEN_KEY, nextToken), setStoredValue(USER_KEY, JSON.stringify(nextUser))]);
     setToken(nextToken);
     setUser(nextUser);
   };
@@ -56,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await Promise.all([SecureStore.deleteItemAsync(TOKEN_KEY), SecureStore.deleteItemAsync(USER_KEY)]);
+    await Promise.all([deleteStoredValue(TOKEN_KEY), deleteStoredValue(USER_KEY)]);
     setToken(null);
     setUser(null);
   };

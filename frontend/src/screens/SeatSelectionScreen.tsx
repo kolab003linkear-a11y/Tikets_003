@@ -1,17 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { createReservation } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 
-const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-const cols = Array.from({ length: 8 }, (_, index) => index + 1);
-const occupied = ['A1', 'A5', 'B2', 'B7', 'C4', 'D6', 'E1', 'E8', 'F3', 'G5', 'H2', 'H7'];
+const defaultRows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+const defaultColumns = 8;
 
 export default function SeatSelectionScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const { showtimeId, movieTitle, price } = route.params;
+  const { user, token } = useAuth();
+  const { showtimeId, movieTitle, price, seatLayout, occupiedSeats = [] } = route.params;
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(300);
+  const [reserving, setReserving] = useState(false);
+
+  const layout = useMemo(() => {
+    const rows = Array.isArray(seatLayout?.rows) && seatLayout.rows.length > 0 ? seatLayout.rows : defaultRows;
+    const columns = typeof seatLayout?.columns === 'number' && seatLayout.columns > 0 ? seatLayout.columns : defaultColumns;
+    return { rows, columns };
+  }, [seatLayout]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,19 +43,10 @@ export default function SeatSelectionScreen() {
     }
   }, [timeLeft, navigation]);
 
-  const seatData = useMemo(
-    () =>
-      rows.flatMap((row) =>
-        cols.map((column) => {
-          const code = `${row}${column}`;
-          return { code, available: !occupied.includes(code) };
-        }),
-      ),
-    [],
-  );
+  const occupiedSet = useMemo(() => new Set(occupiedSeats), [occupiedSeats]);
 
   const toggleSeat = (seatCode: string) => {
-    if (occupied.includes(seatCode)) return;
+    if (occupiedSet.has(seatCode) || reserving || timeLeft === 0) return;
     setSelectedSeats((current) => {
       if (current.includes(seatCode)) return current.filter((seat) => seat !== seatCode);
       return [...current, seatCode].sort((a, b) => a.localeCompare(b));
@@ -55,20 +55,31 @@ export default function SeatSelectionScreen() {
 
   const total = selectedSeats.length * price;
 
-  const goToCheckout = () => {
+  const goToCheckout = async () => {
     if (selectedSeats.length === 0) {
       Alert.alert('Selecciona al menos una butaca');
       return;
     }
 
-    navigation.navigate('Checkout', {
-      reservationId: `RES-${Date.now()}`,
-      selectedSeats,
-      ticketCount: selectedSeats.length,
-      total,
-      showtimeId,
-      movieTitle,
-    });
+    if (!token || !user) return;
+
+    setReserving(true);
+    try {
+      const response = await createReservation(token, user.id, showtimeId, selectedSeats);
+      navigation.navigate('Checkout', {
+        reservationId: response.reservation.id,
+        selectedSeats,
+        ticketCount: selectedSeats.length,
+        total,
+        showtimeId,
+        movieTitle,
+      });
+    } catch (reservationError) {
+      const message = reservationError instanceof Error ? reservationError.message : 'No se pudo reservar esas butacas.';
+      Alert.alert('No se pudo completar la reserva', message);
+    } finally {
+      setReserving(false);
+    }
   };
 
   const min = String(Math.floor(timeLeft / 60)).padStart(2, '0');
@@ -94,13 +105,13 @@ export default function SeatSelectionScreen() {
         <View style={styles.stagePanel}>
           <View style={styles.stage} />
           <View style={styles.grid}>
-            {rows.map((row) => (
+            {layout.rows.map((row: string) => (
               <View key={row} style={styles.row}>
                 <Text style={styles.rowLabel}>{row}</Text>
-                {cols.map((column) => {
+                {Array.from({ length: layout.columns }, (_, index) => index + 1).map((column) => {
                   const seatCode = `${row}${column}`;
                   const isSelected = selectedSeats.includes(seatCode);
-                  const isOccupied = occupied.includes(seatCode);
+                  const isOccupied = occupiedSet.has(seatCode);
                   return (
                     <Pressable
                       key={seatCode}
@@ -125,8 +136,8 @@ export default function SeatSelectionScreen() {
         <View style={styles.summary}>
           <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Butacas</Text><Text style={styles.summaryValue}>{selectedSeats.length ? selectedSeats.join(', ') : 'Ninguna'}</Text></View>
           <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Total</Text><Text style={styles.summaryValue}>€{total.toFixed(2)}</Text></View>
-          <Pressable style={styles.button} onPress={goToCheckout}>
-            <Text style={styles.buttonText}>Continuar al pago</Text>
+          <Pressable style={styles.button} onPress={() => void goToCheckout()} disabled={reserving || timeLeft === 0}>
+            {reserving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continuar al pago</Text>}
           </Pressable>
         </View>
       </ScrollView>

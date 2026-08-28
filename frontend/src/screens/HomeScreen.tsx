@@ -141,6 +141,8 @@ export default function HomeScreen() {
                 movieTitle: movie.title,
                 showtimeId: showtime.id,
                 price,
+                seatLayout: showtime.room.seatLayout,
+                occupiedSeats: showtime.occupiedSeats,
               })
             }
           >
@@ -163,6 +165,8 @@ export default function HomeScreen() {
                       movieTitle: movie.title,
                       showtimeId: showtime.id,
                       price,
+                      seatLayout: showtime.room.seatLayout,
+                      occupiedSeats: showtime.occupiedSeats,
                     })
                   }
                 >

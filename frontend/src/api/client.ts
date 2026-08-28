@@ -5,6 +5,7 @@ export type CatalogShowtime = {
   startTime: string;
   price: number | string;
   availableSeats: number;
+  occupiedSeats: string[];
   room: {
     id: string;
     name: string;
@@ -42,6 +43,19 @@ export type AuthResponse = {
   token: string;
 };
 
+export type ReservationResponse = {
+  success: boolean;
+  reservation: {
+    id: string;
+    expiresAt: string | null;
+  };
+  tickets: Array<{
+    id: string;
+    seatNumber: string;
+    qrCodeHash: string;
+  }>;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -75,6 +89,14 @@ export function register(email: string, password: string) {
   return request<AuthResponse>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify({ email, password, role: 'CLIENT' }),
+  });
+}
+
+export function createReservation(token: string, userId: string, showtimeId: string, seatNumbers: string[]) {
+  return request<ReservationResponse>('/api/reservations/create', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ userId, showtimeId, seatNumbers }),
   });
 }
 

@@ -65,13 +65,13 @@ Convertir la selección visual de butacas en una reserva controlada por el backe
 
 ### Tareas
 
-- [ ] Cargar la distribución de sala desde el catálogo.
-- [ ] Consultar la disponibilidad actual de cada función.
-- [ ] Diferenciar butacas libres, ocupadas y seleccionadas.
-- [ ] Crear reservas con `POST /api/reservations/create`.
-- [ ] Enviar el usuario autenticado y las butacas seleccionadas.
-- [ ] Controlar el vencimiento de cinco minutos.
-- [ ] Mostrar conflictos cuando otra reserva ocupó una butaca.
+- [x] Cargar la distribución de sala desde el catálogo.
+- [x] Consultar la disponibilidad actual de cada función.
+- [x] Diferenciar butacas libres, ocupadas y seleccionadas.
+- [x] Crear reservas con `POST /api/reservations/create`.
+- [x] Enviar el usuario autenticado y las butacas seleccionadas.
+- [x] Controlar el vencimiento de cinco minutos.
+- [x] Mostrar conflictos cuando otra reserva ocupó una butaca.
 - [ ] Permitir cancelar o abandonar una selección pendiente.
 
 ### Criterio de terminado

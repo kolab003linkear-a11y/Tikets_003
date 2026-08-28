@@ -169,6 +169,18 @@ app.get('/api/catalog', async (req, res, next) => {
         showtimes: {
           include: {
             room: true,
+            reservations: {
+              where: {
+                status: {
+                  in: [ReservationStatus.PENDING, ReservationStatus.PAID],
+                },
+              },
+              include: {
+                tickets: {
+                  select: { seatNumber: true },
+                },
+              },
+            },
           },
         },
       },
@@ -177,7 +189,18 @@ app.get('/api/catalog', async (req, res, next) => {
       },
     });
 
-    res.json({ movies });
+    res.json({
+      movies: movies.map((movie) => ({
+        ...movie,
+        showtimes: movie.showtimes.map((showtime) => ({
+          ...showtime,
+          occupiedSeats: showtime.reservations.flatMap((reservation) =>
+            reservation.tickets.map((ticket) => ticket.seatNumber),
+          ),
+          reservations: undefined,
+        })),
+      })),
+    });
   } catch (error) {
     next(error);
   }
@@ -186,6 +209,7 @@ app.get('/api/catalog', async (req, res, next) => {
 app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
   try {
     const payload = reservationSchema.parse(req.body);
+    const authenticatedUser = (req as Request & { user: { sub: string } }).user;
     const seatNumbers = normalizeSeats(payload.seatNumbers);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -222,7 +246,7 @@ app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
       const reservation = await tx.reservation.create({
         data: {
           showtimeId: payload.showtimeId,
-          userId: payload.userId,
+          userId: authenticatedUser.sub,
           status: ReservationStatus.PENDING,
           expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         },

@@ -56,6 +56,20 @@ export type ReservationResponse = {
   }>;
 };
 
+export type PaymentResponse = {
+  success: boolean;
+  mode: 'demo' | 'stripe' | 'payphone';
+  reservation: {
+    id: string;
+    status: 'PAID';
+    tickets: Array<{
+      id: string;
+      qrCodeHash: string;
+      seatNumber: string;
+    }>;
+  };
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -97,6 +111,14 @@ export function createReservation(token: string, userId: string, showtimeId: str
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ userId, showtimeId, seatNumbers }),
+  });
+}
+
+export function confirmDemoPayment(token: string, reservationId: string) {
+  return request<PaymentResponse>('/api/payments/demo-confirm', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ reservationId }),
   });
 }
 

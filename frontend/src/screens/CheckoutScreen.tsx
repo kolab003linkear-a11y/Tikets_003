@@ -1,33 +1,46 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { confirmDemoPayment } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 
 export default function CheckoutScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { token } = useAuth();
   const { reservationId, ticketCount, selectedSeats, total, showtimeId, movieTitle } = route.params;
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
   const [expiry, setExpiry] = useState('12/28');
   const [cvv, setCvv] = useState('123');
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const pay = () => {
+  const pay = async () => {
     if (!cardName.trim() || !cardNumber.trim() || !expiry.trim() || !cvv.trim()) {
       Alert.alert('Completa todos los campos');
       return;
     }
 
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    setError(null);
+    try {
+      if (!token) throw new Error('Tu sesión expiró. Inicia sesión nuevamente.');
+      const response = await confirmDemoPayment(token, reservationId);
+      const ticket = response.reservation.tickets[0];
+      if (!ticket) throw new Error('El pago fue confirmado, pero no se recibió el ticket.');
+
       navigation.navigate('Ticket', {
-        ticketId: `TKT-${Date.now()}`,
-        signature: `sig_${Math.random().toString(36).slice(2, 10)}`,
+        ticketId: ticket.id,
+        signature: ticket.qrCodeHash,
         movieTitle,
         selectedSeats,
       });
-    }, 1400);
+    } catch (paymentError) {
+      setError(paymentError instanceof Error ? paymentError.message : 'No se pudo confirmar el pago.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -57,7 +70,8 @@ export default function CheckoutScreen() {
             <TextInput style={[styles.input, styles.half]} value={expiry} onChangeText={setExpiry} placeholder="MM/AA" placeholderTextColor="#94a3b8" keyboardType="numeric" />
             <TextInput style={[styles.input, styles.half]} value={cvv} onChangeText={setCvv} placeholder="CVV" placeholderTextColor="#94a3b8" keyboardType="numeric" secureTextEntry />
           </View>
-          <Pressable style={styles.payButton} onPress={pay} disabled={processing}>
+          {error && <Text style={styles.error}>{error}</Text>}
+          <Pressable style={styles.payButton} onPress={() => void pay()} disabled={processing}>
             <Text style={styles.payText}>{processing ? 'Procesando pago...' : 'Pagar ahora'}</Text>
           </Pressable>
         </View>
@@ -84,4 +98,5 @@ const styles = StyleSheet.create({
   half: { flex: 1 },
   payButton: { backgroundColor: '#e11d48', borderRadius: 12, paddingVertical: 15, marginTop: 8 },
   payText: { textAlign: 'center', color: '#fff', fontWeight: '800', fontSize: 16 },
+  error: { color: '#fda4af', fontSize: 13, lineHeight: 19, marginBottom: 10 },
 });

@@ -84,14 +84,18 @@ Dos dispositivos no pueden confirmar la misma butaca y el estado mostrado coinci
 ### Objetivo
 Reemplazar el pago simulado por un flujo real y seguro.
 
+### Estado actual
+
+El checkout ya confirma pagos mediante un adaptador demo autenticado y restringido a desarrollo. Falta configurar un proveedor real, sus credenciales y el webhook firmado antes de usarlo en producción.
+
 ### Tareas
 
 - [ ] Definir el proveedor de pago: Stripe o PayPhone.
 - [ ] Configurar las variables de entorno del proveedor.
-- [ ] Conectar el checkout con el endpoint del backend.
-- [ ] Eliminar el `setTimeout` de pago simulado.
-- [ ] Mostrar estados de procesamiento, aprobación y rechazo.
-- [ ] Evitar envíos duplicados.
+- [x] Conectar el checkout con el endpoint del backend.
+- [x] Eliminar el `setTimeout` de pago simulado.
+- [x] Mostrar estados de procesamiento, aprobación y rechazo.
+- [x] Evitar envíos duplicados.
 - [ ] Procesar y verificar el webhook de pago.
 - [ ] Actualizar la reserva solo después de confirmar el pago.
 

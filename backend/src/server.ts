@@ -37,6 +37,10 @@ const webhookSchema = z.object({
   reservationId: z.string().min(1),
 });
 
+const paymentConfirmationSchema = z.object({
+  reservationId: z.string().min(1),
+});
+
 class AppError extends Error {
   statusCode: number;
 
@@ -286,6 +290,56 @@ app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
       reservation: result.reservation,
       tickets: result.createdTickets,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/payments/demo-confirm', authMiddleware, async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError('Demo payments are disabled in production.', 403);
+    }
+
+    const payload = paymentConfirmationSchema.parse(req.body);
+    const authenticatedUser = (req as Request & { user: { sub: string } }).user;
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: payload.reservationId },
+      include: { tickets: true },
+    });
+
+    if (!reservation || reservation.userId !== authenticatedUser.sub) {
+      throw new AppError('Reservation not found.', 404);
+    }
+
+    if (reservation.status !== ReservationStatus.PENDING) {
+      throw new AppError('This reservation is no longer payable.', 409);
+    }
+
+    if (reservation.expiresAt && reservation.expiresAt <= new Date()) {
+      await prisma.reservation.update({
+        where: { id: reservation.id },
+        data: { status: ReservationStatus.CANCELLED },
+      });
+      throw new AppError('The reservation has expired.', 409);
+    }
+
+    const paidReservation = await prisma.$transaction(async (tx) => {
+      const updated = await tx.reservation.update({
+        where: { id: reservation.id },
+        data: { status: ReservationStatus.PAID },
+        include: { tickets: true },
+      });
+
+      await tx.ticket.updateMany({
+        where: { reservationId: reservation.id },
+        data: { status: TicketStatus.VALID },
+      });
+
+      return updated;
+    });
+
+    return res.json({ success: true, reservation: paidReservation, mode: 'demo' });
   } catch (error) {
     next(error);
   }

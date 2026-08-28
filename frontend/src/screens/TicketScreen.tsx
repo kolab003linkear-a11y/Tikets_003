@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { colors, typography } from '../theme';
 
 export default function TicketScreen() {
   const navigation = useNavigation<any>();
@@ -43,16 +44,16 @@ export default function TicketScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#020817' },
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#020817' },
-  homeButton: { position: 'absolute', top: 50, left: 20, backgroundColor: '#111827', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
-  homeText: { color: '#fff', fontWeight: '700' },
-  ticketCard: { width: '100%', maxWidth: 420, backgroundColor: '#0f172a', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f43f5e', shadowColor: '#f43f5e', shadowOffset: { width: 0, height: 0 }, shadowRadius: 30, elevation: 12 },
-  glow: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24, backgroundColor: '#f43f5e', opacity: 0.1 },
-  badge: { color: '#f9a8d4', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: '700', marginBottom: 10 },
-  title: { color: '#f8fafc', fontSize: 28, fontWeight: '800', marginBottom: 10 },
-  subtitle: { color: '#cbd5e1', fontSize: 15, marginBottom: 18 },
-  qrBox: { backgroundColor: '#e2e8f0', alignSelf: 'center', width: 180, height: 180, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 18 },
-  qrText: { color: '#111827', fontSize: 52, fontWeight: '800' },
-  info: { color: '#f8fafc', fontSize: 14, marginBottom: 8 },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: colors.background },
+  homeButton: { position: 'absolute', top: 50, left: 20, backgroundColor: colors.surface, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
+  homeText: { color: colors.text, fontWeight: '700' },
+  ticketCard: { width: '100%', maxWidth: 420, backgroundColor: colors.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.success, shadowColor: colors.success, shadowOffset: { width: 0, height: 0 }, shadowRadius: 30, elevation: 12 },
+  glow: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24, backgroundColor: colors.success, opacity: 0.1 },
+  badge: { color: colors.success, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: '700', marginBottom: 10 },
+  title: { color: colors.text, fontSize: 28, fontWeight: '800', marginBottom: 10, fontFamily: typography.display },
+  subtitle: { color: colors.textSecondary, fontSize: 15, marginBottom: 18 },
+  qrBox: { backgroundColor: colors.text, alignSelf: 'center', width: 180, height: 180, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 18 },
+  qrText: { color: colors.background, fontSize: 52, fontWeight: '800' },
+  info: { color: colors.text, fontSize: 14, marginBottom: 8 },
 });

@@ -10,6 +10,7 @@ import CheckoutScreen from './src/screens/CheckoutScreen';
 import TicketScreen from './src/screens/TicketScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
+import { colors, typography } from './src/theme';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -68,10 +69,10 @@ function HomeTabs() {
     <Tab.Navigator
       screenOptions={({ route }: any) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#e11d48',
-        tabBarInactiveTintColor: '#94a3b8',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#0f172a',
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
           height: 72,
           paddingBottom: 8,
@@ -137,24 +138,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#020817',
+    backgroundColor: colors.background,
     padding: 24,
   },
   errorText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
   },
   placeholder: {
     flex: 1,
-    backgroundColor: '#020817',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
-    color: '#fff',
-    fontSize: 22,
+    color: colors.text,
+    fontSize: typography.cardTitle,
     fontWeight: '700',
   },
   profileEmail: {
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   logoutButton: {
-    backgroundColor: '#e11d48',
+    backgroundColor: colors.critical,
     borderRadius: 12,
     marginTop: 22,
     paddingHorizontal: 18,

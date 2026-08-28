@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
+import { colors, typography } from '../theme';
 
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
@@ -79,19 +80,19 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#020817' },
+  safeArea: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, justifyContent: 'center', padding: 24 },
-  brandMark: { width: 56, height: 56, borderRadius: 18, backgroundColor: '#e11d48', alignItems: 'center', justifyContent: 'center', marginBottom: 22 },
-  brandMarkText: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  overline: { color: '#f472b6', fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4 },
-  title: { color: '#f8fafc', fontSize: 34, fontWeight: '800', marginTop: 4 },
-  subtitle: { color: '#94a3b8', fontSize: 15, lineHeight: 22, marginTop: 10, marginBottom: 30 },
-  form: { backgroundColor: '#0f172a', borderColor: '#1e293b', borderWidth: 1, borderRadius: 18, padding: 18 },
-  label: { color: '#cbd5e1', fontSize: 13, fontWeight: '700', marginBottom: 8, marginTop: 4 },
-  input: { height: 50, backgroundColor: '#0b1220', borderColor: '#334155', borderWidth: 1, borderRadius: 12, color: '#f8fafc', paddingHorizontal: 14, marginBottom: 14 },
-  error: { color: '#fda4af', fontSize: 13, lineHeight: 19, marginBottom: 12 },
-  primaryButton: { minHeight: 50, backgroundColor: '#e11d48', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  brandMark: { width: 56, height: 56, borderRadius: 18, backgroundColor: colors.critical, alignItems: 'center', justifyContent: 'center', marginBottom: 22 },
+  brandMarkText: { color: colors.text, fontSize: 18, fontWeight: '800' },
+  overline: { color: colors.primary, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.4 },
+  title: { color: colors.text, fontSize: 34, fontWeight: '800', marginTop: 4, fontFamily: typography.display },
+  subtitle: { color: colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 10, marginBottom: 30 },
+  form: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: 18 },
+  label: { color: colors.text, fontSize: 13, fontWeight: '700', marginBottom: 8, marginTop: 4 },
+  input: { height: 50, backgroundColor: colors.input, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 12, color: colors.text, paddingHorizontal: 14, marginBottom: 14 },
+  error: { color: colors.critical, fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  primaryButton: { minHeight: 50, backgroundColor: colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   disabled: { opacity: 0.65 },
-  primaryText: { color: '#fff', fontSize: 15, fontWeight: '800' },
-  switchText: { color: '#f9a8d4', fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 22 },
+  primaryText: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  switchText: { color: colors.primary, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 22 },
 });

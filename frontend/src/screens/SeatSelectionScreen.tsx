@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { cancelReservation, createReservation } from '../api/client';
@@ -16,6 +16,7 @@ export default function SeatSelectionScreen() {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(300);
   const [reserving, setReserving] = useState(false);
+  const reservingRef = useRef(false);
   const [pendingReservationId, setPendingReservationId] = useState<string | null>(null);
 
   const layout = useMemo(() => {
@@ -95,13 +96,16 @@ export default function SeatSelectionScreen() {
   };
 
   const goToCheckout = async () => {
-    if (selectedSeats.length === 0) {
-      Alert.alert('Selecciona al menos una butaca');
+    if (reservingRef.current || selectedSeats.length === 0) {
+      if (selectedSeats.length === 0) {
+        Alert.alert('Selecciona al menos una butaca');
+      }
       return;
     }
 
     if (!token || !user) return;
 
+    reservingRef.current = true;
     setReserving(true);
     try {
       const response = await createReservation(token, user.id, showtimeId, selectedSeats);
@@ -116,8 +120,16 @@ export default function SeatSelectionScreen() {
       });
     } catch (reservationError) {
       const message = reservationError instanceof Error ? reservationError.message : 'No se pudo reservar esas butacas.';
-      Alert.alert('No se pudo completar la reserva', message);
+      const conflictMatch = message.match(/Seats already reserved:\s*(.+)$/i);
+      if (conflictMatch) {
+        const conflictedSeats = conflictMatch[1].split(',').map((seat) => seat.trim());
+        setSelectedSeats((current) => current.filter((seat) => !conflictedSeats.includes(seat)));
+        Alert.alert('Butacas ocupadas', `Estas butacas ya no están disponibles: ${conflictedSeats.join(', ')}. Elige otras.`);
+      } else {
+        Alert.alert('No se pudo completar la reserva', message);
+      }
     } finally {
+      reservingRef.current = false;
       setReserving(false);
     }
   };

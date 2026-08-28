@@ -150,14 +150,14 @@ Permitir la operación de eventos y validación de entradas.
 
 ### Tareas
 
-- [ ] Restringir las funciones administrativas por rol.
-- [ ] Implementar lectura de códigos QR.
-- [ ] Validar el ticket contra el backend.
-- [ ] Marcar entradas como usadas.
-- [ ] Mostrar resultado de validación: válido, usado o inválido.
-- [ ] Crear gestión de eventos.
-- [ ] Crear gestión de salas y distribución de butacas.
-- [ ] Crear gestión de funciones, precios y disponibilidad.
+- [x] Restringir las funciones administrativas por rol.
+- [x] Implementar lectura de códigos QR.
+- [x] Validar el ticket contra el backend.
+- [x] Marcar entradas como usadas.
+- [x] Mostrar resultado de validación: válido, usado o inválido.
+- [x] Crear gestión de eventos.
+- [x] Crear gestión de salas y distribución de butacas.
+- [x] Crear gestión de funciones, precios y disponibilidad.
 
 ### Criterio de terminado
 Un usuario con rol autorizado puede validar entradas y administrar la cartelera sin acceso indebido a funciones de cliente.

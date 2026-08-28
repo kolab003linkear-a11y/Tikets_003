@@ -133,19 +133,9 @@ export default function HomeScreen() {
           const price = Number(showtime?.price ?? 0);
 
           return (
-          <Pressable
+          <View
             key={movie.id}
             style={styles.card}
-            disabled={!showtime}
-            onPress={() =>
-              navigation.navigate('SeatSelection', {
-                movieTitle: movie.title,
-                showtimeId: showtime.id,
-                price,
-                seatLayout: showtime.room.seatLayout,
-                occupiedSeats: showtime.occupiedSeats,
-              })
-            }
           >
             <Image source={{ uri: movie.posterUrl }} style={styles.poster} />
             <View style={styles.cardContent}>
@@ -175,7 +165,7 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
             </View>
-          </Pressable>
+          </View>
           );
         })}
       </ScrollView>

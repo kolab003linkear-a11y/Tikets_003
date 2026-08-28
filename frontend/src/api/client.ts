@@ -97,6 +97,48 @@ export type TicketDetails = {
   event: { title: string; startTime: string; room: string };
 };
 
+export type AdminEvent = {
+  id: string;
+  title: string;
+  synopsis: string;
+  duration: number;
+  category: 'CINE' | 'TEATRO' | 'CONCIERTO';
+  posterUrl: string;
+  trailerUrl: string | null;
+  rating: number | string | null;
+  status: 'NOW_SHOWING' | 'COMING_SOON';
+  _count?: { showtimes: number };
+};
+
+export type AdminEventInput = Omit<AdminEvent, 'id' | '_count'>;
+
+export type AdminRoom = {
+  id: string;
+  name: string;
+  capacity: number;
+  seatLayout: { rows: string[]; columns: number };
+  _count?: { showtimes: number };
+};
+
+export type AdminRoomInput = Omit<AdminRoom, 'id' | '_count'>;
+
+export type AdminShowtime = {
+  id: string;
+  startTime: string;
+  price: number | string;
+  availableSeats: number;
+  movie: { id: string; title: string };
+  room: { id: string; name: string; capacity: number };
+};
+
+export type AdminShowtimeInput = {
+  movieId: string;
+  roomId: string;
+  startTime: string;
+  price: number;
+  availableSeats?: number;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -108,7 +150,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message = payload?.error ?? `Error ${response.status} al consultar el servidor.`;
+    const message = payload?.message ?? payload?.error ?? `Error ${response.status} al consultar el servidor.`;
     throw new Error(message);
   }
 
@@ -156,9 +198,89 @@ export function cancelReservation(token: string, reservationId: string) {
   });
 }
 
+export type TicketValidationResponse = {
+  valid: boolean;
+  status: 'VALID' | 'USED' | 'EXPIRED' | 'INVALID';
+  message: string;
+  ticket?: {
+    id: string;
+    seatNumber: string;
+    status?: 'VALID' | 'USED' | 'EXPIRED';
+    usedAt?: string | null;
+    reservationId: string;
+    event?: {
+      title: string;
+      startTime: string;
+      room: string;
+    };
+  };
+};
+
+export function validateTicket(token: string, qrCode: string) {
+  return request<TicketValidationResponse>('/api/admin/tickets/validate', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ qrCode }),
+  });
+}
+
 export function getMyTickets(token: string) {
   return request<{ tickets: TicketDetails[] }>('/api/tickets', {
     headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getAdminEvents(token: string) {
+  return request<{ events: AdminEvent[] }>('/api/admin/events', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function createAdminEvent(token: string, event: AdminEventInput) {
+  return request<{ event: AdminEvent }>('/api/admin/events', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(event),
+  });
+}
+
+export function updateAdminEvent(token: string, eventId: string, event: AdminEventInput) {
+  return request<{ event: AdminEvent }>(`/api/admin/events/${eventId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(event),
+  });
+}
+
+export function getAdminRooms(token: string) {
+  return request<{ rooms: AdminRoom[] }>('/api/admin/rooms', { headers: { Authorization: `Bearer ${token}` } });
+}
+
+export function createAdminRoom(token: string, room: AdminRoomInput) {
+  return request<{ room: AdminRoom }>('/api/admin/rooms', {
+    method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(room),
+  });
+}
+
+export function updateAdminRoom(token: string, roomId: string, room: AdminRoomInput) {
+  return request<{ room: AdminRoom }>(`/api/admin/rooms/${roomId}`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(room),
+  });
+}
+
+export function getAdminShowtimes(token: string) {
+  return request<{ showtimes: AdminShowtime[] }>('/api/admin/showtimes', { headers: { Authorization: `Bearer ${token}` } });
+}
+
+export function createAdminShowtime(token: string, showtime: AdminShowtimeInput) {
+  return request<{ showtime: AdminShowtime }>('/api/admin/showtimes', {
+    method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(showtime),
+  });
+}
+
+export function updateAdminShowtime(token: string, showtimeId: string, showtime: AdminShowtimeInput) {
+  return request<{ showtime: AdminShowtime }>(`/api/admin/showtimes/${showtimeId}`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(showtime),
   });
 }
 

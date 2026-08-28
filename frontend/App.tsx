@@ -11,6 +11,9 @@ import TicketScreen from './src/screens/TicketScreen';
 import MyTicketsScreen from './src/screens/MyTicketsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AuthScreen from './src/screens/AuthScreen';
+import AdminScannerScreen from './src/screens/AdminScannerScreen';
+import AdminEventsScreen from './src/screens/AdminEventsScreen';
+import AdminScheduleScreen from './src/screens/AdminScheduleScreen';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import { colors, typography } from './src/theme';
 
@@ -36,15 +39,11 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 }
 
-function ScannerScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Admin Scanner</Text>
-    </View>
-  );
-}
-
 function HomeTabs() {
+  const { user } = useAuth();
+  const canUseAdminScanner = user?.role === 'ADMIN' || user?.role === 'SCANNER';
+  const canManageEvents = user?.role === 'ADMIN';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }: any) => ({
@@ -64,6 +63,8 @@ function HomeTabs() {
             'Mis Tickets': 'ticket-outline',
             Perfil: 'person-outline',
             'Admin Scanner': 'scan-outline',
+            'Admin Eventos': 'settings-outline',
+            'Admin Salas': 'calendar-outline',
           } as const;
 
           return <Ionicons name={iconMap[route.name as keyof typeof iconMap] ?? 'film-outline'} size={size} color={color} />;
@@ -73,7 +74,9 @@ function HomeTabs() {
       <Tab.Screen name="Cartelera" component={HomeScreen} />
       <Tab.Screen name="Mis Tickets" component={MyTicketsScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
-      <Tab.Screen name="Admin Scanner" component={ScannerScreen} />
+      {canUseAdminScanner && <Tab.Screen name="Admin Scanner" component={AdminScannerScreen} />}
+      {canManageEvents && <Tab.Screen name="Admin Eventos" component={AdminEventsScreen} />}
+      {canManageEvents && <Tab.Screen name="Admin Salas" component={AdminScheduleScreen} />}
     </Tab.Navigator>
   );
 }

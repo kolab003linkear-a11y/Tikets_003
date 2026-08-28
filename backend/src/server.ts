@@ -45,6 +45,34 @@ const profileSchema = z.object({
   email: z.string().email(),
 });
 
+const eventSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  synopsis: z.string().trim().min(1).max(2000),
+  duration: z.coerce.number().int().min(1).max(600),
+  category: z.enum(['CINE', 'TEATRO', 'CONCIERTO']),
+  posterUrl: z.string().trim().url(),
+  trailerUrl: z.string().trim().url().nullable().optional(),
+  rating: z.coerce.number().min(0).max(10).nullable().optional(),
+  status: z.enum(['NOW_SHOWING', 'COMING_SOON']),
+});
+
+const roomSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  capacity: z.coerce.number().int().min(1).max(500),
+  seatLayout: z.object({
+    rows: z.array(z.string().trim().min(1).max(3)).min(1).max(26),
+    columns: z.coerce.number().int().min(1).max(30),
+  }),
+});
+
+const showtimeSchema = z.object({
+  movieId: z.string().min(1),
+  roomId: z.string().min(1),
+  startTime: z.coerce.date(),
+  price: z.coerce.number().positive().max(10000),
+  availableSeats: z.coerce.number().int().min(0).optional(),
+});
+
 class AppError extends Error {
   statusCode: number;
 
@@ -177,6 +205,161 @@ app.patch('/api/me', authMiddleware, async (req, res, next) => {
   }
 });
 
+app.get('/api/admin/events', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) {
+      throw new AppError('Only administrators can manage events.', 403);
+    }
+
+    const events = await prisma.movieEvent.findMany({
+      include: { _count: { select: { showtimes: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json({ events });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/admin/events', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) {
+      throw new AppError('Only administrators can manage events.', 403);
+    }
+
+    const payload = eventSchema.parse(req.body);
+    const event = await prisma.movieEvent.create({
+      data: {
+        ...payload,
+        trailerUrl: payload.trailerUrl ?? null,
+        rating: payload.rating ?? null,
+      },
+    });
+
+    return res.status(201).json({ event });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch('/api/admin/events/:eventId', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) {
+      throw new AppError('Only administrators can manage events.', 403);
+    }
+
+    const payload = eventSchema.parse(req.body);
+    const event = await prisma.movieEvent.update({
+      where: { id: req.params.eventId },
+      data: {
+        ...payload,
+        trailerUrl: payload.trailerUrl ?? null,
+        rating: payload.rating ?? null,
+      },
+    });
+
+    return res.json({ event });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/admin/rooms', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) throw new AppError('Only administrators can manage rooms.', 403);
+    const rooms = await prisma.room.findMany({
+      include: { _count: { select: { showtimes: true } } },
+      orderBy: { name: 'asc' },
+    });
+    return res.json({ rooms });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/admin/rooms', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) throw new AppError('Only administrators can manage rooms.', 403);
+    const payload = roomSchema.parse(req.body);
+    if (payload.seatLayout.rows.length * payload.seatLayout.columns < payload.capacity) {
+      throw new AppError('The seat layout cannot be smaller than the room capacity.', 400);
+    }
+    const room = await prisma.room.create({ data: payload });
+    return res.status(201).json({ room });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch('/api/admin/rooms/:roomId', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) throw new AppError('Only administrators can manage rooms.', 403);
+    const payload = roomSchema.parse(req.body);
+    if (payload.seatLayout.rows.length * payload.seatLayout.columns < payload.capacity) {
+      throw new AppError('The seat layout cannot be smaller than the room capacity.', 400);
+    }
+    const room = await prisma.room.update({ where: { id: req.params.roomId }, data: payload });
+    return res.json({ room });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/admin/showtimes', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) throw new AppError('Only administrators can manage showtimes.', 403);
+    const showtimes = await prisma.showtime.findMany({
+      include: { movie: { select: { id: true, title: true } }, room: { select: { id: true, name: true, capacity: true } } },
+      orderBy: { startTime: 'asc' },
+    });
+    return res.json({ showtimes });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/admin/showtimes', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) throw new AppError('Only administrators can manage showtimes.', 403);
+    const payload = showtimeSchema.parse(req.body);
+    const room = await prisma.room.findUnique({ where: { id: payload.roomId } });
+    if (!room) throw new AppError('Room not found.', 404);
+    const movie = await prisma.movieEvent.findUnique({ where: { id: payload.movieId }, select: { id: true } });
+    if (!movie) throw new AppError('Event not found.', 404);
+    const availableSeats = payload.availableSeats ?? room.capacity;
+    if (availableSeats > room.capacity) throw new AppError('Availability cannot exceed room capacity.', 400);
+    const showtime = await prisma.showtime.create({ data: { ...payload, availableSeats } });
+    return res.status(201).json({ showtime });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch('/api/admin/showtimes/:showtimeId', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { role: UserRole } }).user;
+    if (authenticatedUser.role !== UserRole.ADMIN) throw new AppError('Only administrators can manage showtimes.', 403);
+    const payload = showtimeSchema.parse(req.body);
+    const room = await prisma.room.findUnique({ where: { id: payload.roomId } });
+    if (!room) throw new AppError('Room not found.', 404);
+    const availableSeats = payload.availableSeats ?? room.capacity;
+    if (availableSeats > room.capacity) throw new AppError('Availability cannot exceed room capacity.', 400);
+    const showtime = await prisma.showtime.update({ where: { id: req.params.showtimeId }, data: { ...payload, availableSeats } });
+    return res.json({ showtime });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get('/api/catalog', async (req, res, next) => {
   try {
     const category = String(req.query.category ?? 'ALL');
@@ -259,6 +442,15 @@ app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
 
       if (!showtime) {
         throw new AppError('Selected showtime was not found.', 404);
+      }
+
+      const seatLayout = showtime.room.seatLayout as { rows?: unknown; columns?: unknown };
+      const rows = Array.isArray(seatLayout.rows) ? seatLayout.rows.filter((row): row is string => typeof row === 'string') : [];
+      const columns = typeof seatLayout.columns === 'number' ? seatLayout.columns : 0;
+      const validSeats = new Set(rows.flatMap((row) => Array.from({ length: columns }, (_, index) => `${row}${index + 1}`)));
+      const invalidSeats = seatNumbers.filter((seat) => !validSeats.has(seat));
+      if (invalidSeats.length > 0) {
+        throw new AppError(`Invalid seats: ${invalidSeats.join(', ')}`, 400);
       }
 
       await tx.$queryRaw`SELECT id FROM "showtimes" WHERE id = ${payload.showtimeId} FOR UPDATE`;
@@ -472,6 +664,120 @@ app.get('/api/tickets', authMiddleware, async (req, res, next) => {
           room: ticket.reservation.showtime.room.name,
         },
       })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/admin/tickets/validate', authMiddleware, async (req, res, next) => {
+  try {
+    const schema = z.object({ qrCode: z.string().min(1) });
+    const payload = schema.parse(req.body);
+    const authenticatedUser = (req as Request & { user: { sub: string; role: UserRole } }).user;
+
+    if (authenticatedUser.role !== UserRole.ADMIN && authenticatedUser.role !== UserRole.SCANNER) {
+      throw new AppError('You do not have permission to validate tickets.', 403);
+    }
+
+    const qrCode = payload.qrCode.trim();
+    const matches = qrCode.match(/^ticketsafe:v1:([^:]+):([^:]+)$/i);
+    const ticketId = matches ? matches[1] : qrCode;
+    const expectedHash = matches ? matches[2] : null;
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        reservation: {
+          include: {
+            showtime: { include: { movie: true, room: true } },
+          },
+        },
+      },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        valid: false,
+        status: 'INVALID',
+        message: 'Ticket not found or QR invalid.',
+      });
+    }
+
+    if (expectedHash && ticket.qrCodeHash !== expectedHash) {
+      return res.status(409).json({
+        valid: false,
+        status: 'INVALID',
+        message: 'This QR code does not correspond to the ticket.',
+      });
+    }
+
+    if (ticket.reservation.status !== ReservationStatus.PAID) {
+      return res.status(409).json({
+        valid: false,
+        status: 'INVALID',
+        message: 'This ticket is not paid or is no longer valid.',
+      });
+    }
+
+    if (ticket.status === TicketStatus.USED) {
+      return res.json({
+        valid: false,
+        status: 'USED',
+        message: 'This ticket has already been used.',
+        ticket: {
+          id: ticket.id,
+          seatNumber: ticket.seatNumber,
+          usedAt: ticket.usedAt,
+          reservationId: ticket.reservationId,
+        },
+      });
+    }
+
+    if (ticket.status === TicketStatus.EXPIRED) {
+      return res.json({
+        valid: false,
+        status: 'EXPIRED',
+        message: 'This ticket has expired.',
+        ticket: {
+          id: ticket.id,
+          seatNumber: ticket.seatNumber,
+          reservationId: ticket.reservationId,
+        },
+      });
+    }
+
+    const updated = await prisma.ticket.update({
+      where: { id: ticket.id },
+      data: {
+        status: TicketStatus.USED,
+        usedAt: new Date(),
+      },
+      include: {
+        reservation: {
+          include: {
+            showtime: { include: { movie: true, room: true } },
+          },
+        },
+      },
+    });
+
+    return res.json({
+      valid: true,
+      status: 'USED',
+      message: 'Ticket validated successfully.',
+      ticket: {
+        id: updated.id,
+        seatNumber: updated.seatNumber,
+        status: updated.status,
+        usedAt: updated.usedAt,
+        reservationId: updated.reservationId,
+        event: {
+          title: updated.reservation.showtime.movie.title,
+          startTime: updated.reservation.showtime.startTime,
+          room: updated.reservation.showtime.room.name,
+        },
+      },
     });
   } catch (error) {
     next(error);

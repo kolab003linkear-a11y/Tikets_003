@@ -3,11 +3,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet } from 'react-native';
 import HomeScreen from './src/screens/HomeScreen';
 import SeatSelectionScreen from './src/screens/SeatSelectionScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 import TicketScreen from './src/screens/TicketScreen';
+import AuthScreen from './src/screens/AuthScreen';
+import { AuthProvider, useAuth } from './src/auth/AuthContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -40,9 +42,15 @@ function TicketsScreen() {
 }
 
 function ProfileScreen() {
+  const { user, signOut } = useAuth();
+
   return (
     <View style={styles.placeholder}>
       <Text style={styles.placeholderText}>Perfil</Text>
+      <Text style={styles.profileEmail}>{user?.email}</Text>
+      <Pressable style={styles.logoutButton} onPress={() => void signOut()}>
+        <Text style={styles.logoutText}>Cerrar sesión</Text>
+      </Pressable>
     </View>
   );
 }
@@ -89,7 +97,19 @@ function HomeTabs() {
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { user, restoring } = useAuth();
+
+  if (restoring) {
+    return (
+      <View style={styles.placeholder}>
+        <Text style={styles.placeholderText}>Cargando sesión...</Text>
+      </View>
+    );
+  }
+
+  if (!user) return <AuthScreen />;
+
   return (
     <ErrorBoundary>
       <NavigationContainer>
@@ -101,6 +121,14 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
@@ -128,5 +156,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 22,
     fontWeight: '700',
+  },
+  profileEmail: {
+    color: '#94a3b8',
+    fontSize: 15,
+    marginTop: 10,
+  },
+  logoutButton: {
+    backgroundColor: '#e11d48',
+    borderRadius: 12,
+    marginTop: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: '800',
   },
 });

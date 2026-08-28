@@ -5,7 +5,7 @@ Este documento organiza la evolución de la aplicación por fases. Cada fase deb
 ## Estado
 
 - [x] Fase 1: Base funcional
-- [ ] Fase 2: Autenticación
+- [x] Fase 2: Autenticación
 - [ ] Fase 3: Reservas reales
 - [ ] Fase 4: Pagos
 - [ ] Fase 5: Tickets y QR
@@ -44,14 +44,14 @@ Permitir que cada usuario tenga una sesión segura.
 
 ### Tareas
 
-- [ ] Crear pantallas de registro e inicio de sesión.
-- [ ] Conectar registro con `POST /api/auth/register`.
-- [ ] Conectar login con `POST /api/auth/login`.
-- [ ] Guardar el token de sesión de forma persistente.
-- [ ] Restaurar la sesión al abrir la aplicación.
-- [ ] Proteger las acciones que requieren usuario autenticado.
-- [ ] Añadir cierre de sesión.
-- [ ] Validar formularios y mostrar errores claros.
+- [x] Crear pantallas de registro e inicio de sesión.
+- [x] Conectar registro con `POST /api/auth/register`.
+- [x] Conectar login con `POST /api/auth/login`.
+- [x] Guardar el token de sesión de forma persistente.
+- [x] Restaurar la sesión al abrir la aplicación.
+- [x] Proteger las acciones que requieren usuario autenticado.
+- [x] Añadir cierre de sesión.
+- [x] Validar formularios y mostrar errores claros.
 
 ### Criterio de terminado
 Un usuario puede registrarse, cerrar y volver a abrir la app, conservar su sesión y cerrar sesión correctamente.

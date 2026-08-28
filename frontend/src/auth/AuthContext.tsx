@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { AuthUser, login, register } from '../api/client';
+import { AuthUser, login, register, updateMe } from '../api/client';
 
 const TOKEN_KEY = 'ochoymedio.auth.token';
 const USER_KEY = 'ochoymedio.auth.user';
@@ -28,6 +28,7 @@ type AuthContextValue = {
   restoring: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
+  updateProfile: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -69,13 +70,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await saveSession(response.token, response.user);
   };
 
+  const updateProfile = async (email: string) => {
+    if (!token) throw new Error('Tu sesión expiró. Inicia sesión nuevamente.');
+    const response = await updateMe(token, email);
+    await setStoredValue(USER_KEY, JSON.stringify(response.user));
+    setUser(response.user);
+  };
+
   const signOut = async () => {
     await Promise.all([deleteStoredValue(TOKEN_KEY), deleteStoredValue(USER_KEY)]);
     setToken(null);
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, token, restoring, signIn, signUp, signOut }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, token, restoring, signIn, signUp, updateProfile, signOut }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

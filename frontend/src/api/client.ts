@@ -145,4 +145,18 @@ export function getMyTickets(token: string) {
   });
 }
 
+export function getMe(token: string) {
+  return request<{ user: AuthUser }>('/api/me', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateMe(token: string, email: string) {
+  return request<{ user: AuthUser }>('/api/me', {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ email }),
+  });
+}
+
 export { API_BASE_URL };

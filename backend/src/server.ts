@@ -41,6 +41,10 @@ const paymentConfirmationSchema = z.object({
   reservationId: z.string().min(1),
 });
 
+const profileSchema = z.object({
+  email: z.string().email(),
+});
+
 class AppError extends Error {
   statusCode: number;
 
@@ -137,6 +141,37 @@ app.post('/api/auth/login', async (req, res, next) => {
       },
       token,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/me', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { sub: string } }).user;
+    const user = await prisma.user.findUnique({
+      where: { id: authenticatedUser.sub },
+      select: { id: true, email: true, role: true, createdAt: true },
+    });
+
+    if (!user) throw new AppError('User not found.', 404);
+    return res.json({ user });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch('/api/me', authMiddleware, async (req, res, next) => {
+  try {
+    const payload = profileSchema.parse(req.body);
+    const authenticatedUser = (req as Request & { user: { sub: string } }).user;
+    const user = await prisma.user.update({
+      where: { id: authenticatedUser.sub },
+      data: { email: payload.email.trim().toLowerCase() },
+      select: { id: true, email: true, role: true, createdAt: true },
+    });
+
+    return res.json({ user });
   } catch (error) {
     next(error);
   }

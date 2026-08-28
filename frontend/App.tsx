@@ -9,6 +9,7 @@ import SeatSelectionScreen from './src/screens/SeatSelectionScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 import TicketScreen from './src/screens/TicketScreen';
 import MyTicketsScreen from './src/screens/MyTicketsScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import { colors, typography } from './src/theme';
@@ -33,20 +34,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     }
     return this.props.children;
   }
-}
-
-function ProfileScreen() {
-  const { user, signOut } = useAuth();
-
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Perfil</Text>
-      <Text style={styles.profileEmail}>{user?.email}</Text>
-      <Pressable style={styles.logoutButton} onPress={() => void signOut()}>
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </Pressable>
-    </View>
-  );
 }
 
 function ScannerScreen() {
@@ -150,21 +137,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: typography.cardTitle,
     fontWeight: '700',
-  },
-  profileEmail: {
-    color: '#94a3b8',
-    fontSize: 15,
-    marginTop: 10,
-  },
-  logoutButton: {
-    backgroundColor: colors.critical,
-    borderRadius: 12,
-    marginTop: 22,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-  },
-  logoutText: {
-    color: '#fff',
-    fontWeight: '800',
   },
 });

@@ -130,13 +130,13 @@ Completar el área personal del usuario.
 
 ### Tareas
 
-- [ ] Crear el endpoint para listar tickets del usuario si todavía no existe.
-- [ ] Mostrar tickets activos, usados y expirados.
-- [ ] Abrir el detalle de cada ticket.
-- [ ] Mostrar historial de reservas.
-- [ ] Completar los datos del perfil.
+- [x] Crear el endpoint para listar tickets del usuario si todavía no existe.
+- [x] Mostrar tickets activos, usados y expirados.
+- [x] Abrir el detalle de cada ticket.
+- [x] Mostrar historial de reservas.
+- [x] Completar los datos del perfil.
 - [ ] Añadir preferencias básicas del usuario.
-- [ ] Añadir cierre de sesión desde Perfil.
+- [x] Añadir cierre de sesión desde Perfil.
 
 ### Criterio de terminado
 El usuario puede consultar sus compras anteriores y administrar su sesión desde la aplicación.

@@ -33,9 +33,12 @@ export default function CheckoutScreen() {
 
       navigation.navigate('Ticket', {
         ticketId: ticket.id,
-        signature: ticket.qrCodeHash,
+        qrPayload: `ticketsafe:v1:${ticket.id}:${ticket.qrCodeHash}`,
+        status: 'VALID',
         movieTitle,
         selectedSeats,
+        startTime: response.reservation.showtime.startTime,
+        roomName: response.reservation.showtime.room.name,
       });
     } catch (paymentError) {
       setError(paymentError instanceof Error ? paymentError.message : 'No se pudo confirmar el pago.');

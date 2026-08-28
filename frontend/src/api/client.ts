@@ -67,7 +67,24 @@ export type PaymentResponse = {
       qrCodeHash: string;
       seatNumber: string;
     }>;
+    showtime: {
+      startTime: string;
+      movie: { title: string };
+      room: { name: string };
+    };
   };
+};
+
+export type TicketDetails = {
+  id: string;
+  seatNumber: string;
+  status: 'VALID' | 'USED' | 'EXPIRED';
+  createdAt: string;
+  usedAt: string | null;
+  qrPayload: string;
+  reservationId: string;
+  reservationStatus: 'PENDING' | 'PAID' | 'CANCELLED';
+  event: { title: string; startTime: string; room: string };
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -119,6 +136,12 @@ export function confirmDemoPayment(token: string, reservationId: string) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ reservationId }),
+  });
+}
+
+export function getMyTickets(token: string) {
+  return request<{ tickets: TicketDetails[] }>('/api/tickets', {
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

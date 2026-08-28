@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import QRCode from 'react-native-qrcode-svg';
 import { colors, typography } from '../theme';
 
 export default function TicketScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { ticketId, signature, movieTitle, selectedSeats } = route.params;
+  const { ticketId, qrPayload, status = 'VALID', movieTitle, selectedSeats, startTime, roomName } = route.params;
   const scale = useRef(new Animated.Value(0.9)).current;
   const glow = useRef(new Animated.Value(0.3)).current;
 
@@ -22,6 +23,10 @@ export default function TicketScreen() {
     ]).start();
   }, [glow, scale]);
 
+  const formattedDate = startTime
+    ? new Date(startTime).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })
+    : 'Horario pendiente';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -34,9 +39,13 @@ export default function TicketScreen() {
           <Text style={styles.badge}>Entrada digital</Text>
           <Text style={styles.title}>{movieTitle}</Text>
           <Text style={styles.subtitle}>Butacas: {selectedSeats.join(', ')}</Text>
-          <View style={styles.qrBox}><Text style={styles.qrText}>QR</Text></View>
+          <Text style={styles.accessStatus}>ACCESO AUTORIZADO · {status}</Text>
+          <View style={styles.qrBox} accessibilityLabel="Código QR de la entrada">
+            <QRCode value={qrPayload ?? ticketId} size={156} color={colors.background} backgroundColor={colors.text} />
+          </View>
+          <Text style={styles.eventInfo}>{formattedDate}</Text>
+          <Text style={styles.eventInfo}>{roomName ?? 'Sala pendiente'}</Text>
           <Text style={styles.info}>Ticket ID: {ticketId}</Text>
-          <Text style={styles.info}>Signature: {signature}</Text>
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -54,6 +63,7 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 28, fontWeight: '800', marginBottom: 10, fontFamily: typography.display },
   subtitle: { color: colors.textSecondary, fontSize: 15, marginBottom: 18 },
   qrBox: { backgroundColor: colors.text, alignSelf: 'center', width: 180, height: 180, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 18 },
-  qrText: { color: colors.background, fontSize: 52, fontWeight: '800' },
+  accessStatus: { color: colors.success, fontSize: 12, fontWeight: '800', marginBottom: 12 },
+  eventInfo: { color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 5 },
   info: { color: colors.text, fontSize: 14, marginBottom: 8 },
 });

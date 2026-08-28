@@ -8,6 +8,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import SeatSelectionScreen from './src/screens/SeatSelectionScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 import TicketScreen from './src/screens/TicketScreen';
+import MyTicketsScreen from './src/screens/MyTicketsScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import { colors, typography } from './src/theme';
@@ -32,14 +33,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     }
     return this.props.children;
   }
-}
-
-function TicketsScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Mis Tickets</Text>
-    </View>
-  );
 }
 
 function ProfileScreen() {
@@ -91,7 +84,7 @@ function HomeTabs() {
       })}
     >
       <Tab.Screen name="Cartelera" component={HomeScreen} />
-      <Tab.Screen name="Mis Tickets" component={TicketsScreen} />
+      <Tab.Screen name="Mis Tickets" component={MyTicketsScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
       <Tab.Screen name="Admin Scanner" component={ScannerScreen} />
     </Tab.Navigator>

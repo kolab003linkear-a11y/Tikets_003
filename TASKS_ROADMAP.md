@@ -111,11 +111,11 @@ Generar una entrada digital verificable después del pago.
 
 ### Tareas
 
-- [ ] Obtener los tickets reales de la reserva pagada.
-- [ ] Generar un QR con la información necesaria para validación.
-- [ ] Mostrar evento, horario, sala y butacas.
-- [ ] Mostrar identificador y estado del ticket.
-- [ ] Evitar mostrar firmas o secretos innecesarios al usuario.
+- [x] Obtener los tickets reales de la reserva pagada.
+- [x] Generar un QR con la información necesaria para validación.
+- [x] Mostrar evento, horario, sala y butacas.
+- [x] Mostrar identificador y estado del ticket.
+- [x] Evitar mostrar firmas o secretos innecesarios al usuario.
 - [ ] Preparar el ticket para uso sin conexión cuando sea posible.
 
 ### Criterio de terminado

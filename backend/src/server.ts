@@ -328,7 +328,10 @@ app.post('/api/payments/demo-confirm', authMiddleware, async (req, res, next) =>
       const updated = await tx.reservation.update({
         where: { id: reservation.id },
         data: { status: ReservationStatus.PAID },
-        include: { tickets: true },
+        include: {
+          tickets: true,
+          showtime: { include: { movie: true, room: true } },
+        },
       });
 
       await tx.ticket.updateMany({
@@ -340,6 +343,41 @@ app.post('/api/payments/demo-confirm', authMiddleware, async (req, res, next) =>
     });
 
     return res.json({ success: true, reservation: paidReservation, mode: 'demo' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/api/tickets', authMiddleware, async (req, res, next) => {
+  try {
+    const authenticatedUser = (req as Request & { user: { sub: string } }).user;
+    const tickets = await prisma.ticket.findMany({
+      where: { reservation: { userId: authenticatedUser.sub } },
+      include: {
+        reservation: {
+          include: { showtime: { include: { movie: true, room: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json({
+      tickets: tickets.map((ticket) => ({
+        id: ticket.id,
+        seatNumber: ticket.seatNumber,
+        status: ticket.status,
+        createdAt: ticket.createdAt,
+        usedAt: ticket.usedAt,
+        qrPayload: `ticketsafe:v1:${ticket.id}:${ticket.qrCodeHash}`,
+        reservationId: ticket.reservationId,
+        reservationStatus: ticket.reservation.status,
+        event: {
+          title: ticket.reservation.showtime.movie.title,
+          startTime: ticket.reservation.showtime.startTime,
+          room: ticket.reservation.showtime.room.name,
+        },
+      })),
+    });
   } catch (error) {
     next(error);
   }

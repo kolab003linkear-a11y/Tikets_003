@@ -4,9 +4,10 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient, ReservationStatus, TicketStatus, UserRole } from '@prisma/client';
+import { Prisma, PrismaClient, ReservationStatus, TicketStatus, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { createHash } from 'crypto';
+import { writeLog } from './logger';
 
 dotenv.config();
 
@@ -434,6 +435,14 @@ app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
     const authenticatedUser = (req as Request & { user: { sub: string } }).user;
     const seatNumbers = normalizeSeats(payload.seatNumbers);
 
+    const account = await prisma.user.findUnique({
+      where: { id: authenticatedUser.sub },
+      select: { id: true },
+    });
+    if (!account) {
+      throw new AppError('Your session is no longer valid. Please sign in again.', 401);
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const showtime = await tx.showtime.findUnique({
         where: { id: payload.showtimeId },
@@ -477,7 +486,7 @@ app.post('/api/reservations/create', authMiddleware, async (req, res, next) => {
       const reservation = await tx.reservation.create({
         data: {
           showtimeId: payload.showtimeId,
-          userId: authenticatedUser.sub,
+          userId: account.id,
           status: ReservationStatus.PENDING,
           expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         },
@@ -816,7 +825,9 @@ app.post('/api/payments/webhook', async (req, res, next) => {
   }
 });
 
-app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
+  writeLog('ERROR', `${req.method} ${req.originalUrl}`, error);
+
   if (error instanceof z.ZodError) {
     return res.status(400).json({
       success: false,
@@ -832,7 +843,22 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     });
   }
 
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({ success: false, message: 'The requested record already exists.' });
+    }
+
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, message: 'The requested record was not found.' });
+    }
+
+    if (error.code === 'P2034') {
+      return res.status(409).json({ success: false, message: 'The reservation changed while processing. Please choose the seats again.' });
+    }
+  }
+
   const err = error as Error & { statusCode?: number };
+  console.error('Unhandled API error:', error);
   return res.status(err.statusCode ?? 500).json({
     success: false,
     message: err.message ?? 'Internal server error.',
@@ -840,5 +866,7 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(port, () => {
-  console.log(`Ochoymedio API running at http://localhost:${port}`);
+  const message = `Ochoymedio API running at http://localhost:${port}`;
+  console.log(message);
+  writeLog('INFO', message);
 });

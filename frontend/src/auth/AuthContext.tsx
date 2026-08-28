@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { AuthUser, login, register, updateMe } from '../api/client';
+import { AuthUser, getMe, login, register, updateMe } from '../api/client';
 
 const TOKEN_KEY = 'ochoymedio.auth.token';
 const USER_KEY = 'ochoymedio.auth.user';
@@ -41,10 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     Promise.all([getStoredValue(TOKEN_KEY), getStoredValue(USER_KEY)])
-      .then(([storedToken, storedUser]) => {
+      .then(async ([storedToken, storedUser]) => {
         if (storedToken && storedUser) {
+          const response = await getMe(storedToken);
           setToken(storedToken);
-          setUser(JSON.parse(storedUser) as AuthUser);
+          setUser(response.user);
         }
       })
       .catch(() => {
